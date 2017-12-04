@@ -1,22 +1,30 @@
-package com.google.location.nearby.apps.walkietalkie;
+package li.zoss.bfh.bsc.nearby_sender;
 
-import static android.os.Process.THREAD_PRIORITY_AUDIO;
-import static android.os.Process.setThreadPriority;
-import static com.google.location.nearby.apps.walkietalkie.Constants.TAG;
-
+import android.Manifest;
+import android.app.Activity;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.ParcelFileDescriptor;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
+
 import java.io.IOException;
 import java.io.OutputStream;
+
+import static android.os.Process.THREAD_PRIORITY_AUDIO;
+import static android.os.Process.setThreadPriority;
+import static android.support.v4.app.ActivityCompat.requestPermissions;
+import static li.zoss.bfh.bsc.nearby_sender.ConnectionsActivity.hasPermissions;
 
 /**
  * When created, you must pass a {@link ParcelFileDescriptor}. Once {@link #start()} is called, the
  * file descriptor will be written to until {@link #stop()} is called.
  */
 public class AudioRecorder {
+
   /** The stream to write to. */
   private final OutputStream mOutputStream;
 
@@ -28,6 +36,7 @@ public class AudioRecorder {
 
   /** The background thread recording audio for us. */
   private Thread mThread;
+  private String TAG = "AudioRecorder";
 
   /**
    * A simple audio recorder.
@@ -37,7 +46,6 @@ public class AudioRecorder {
   public AudioRecorder(ParcelFileDescriptor file) {
     mOutputStream = new ParcelFileDescriptor.AutoCloseOutputStream(file);
   }
-
   /** @return True if actively recording. False otherwise. */
   public boolean isRecording() {
     return mAlive;

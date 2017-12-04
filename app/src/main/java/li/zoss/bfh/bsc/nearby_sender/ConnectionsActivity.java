@@ -1,4 +1,4 @@
-package bsc.bfh.zoss.li.nearby_sender;
+package li.zoss.bfh.bsc.nearby_sender;
 
 import android.Manifest;
 import android.content.Context;
@@ -10,8 +10,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -102,7 +100,7 @@ public abstract class ConnectionsActivity extends AppCompatActivity
             new ConnectionLifecycleCallback() {
                 @Override
                 public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
-                    logD(
+                    Log.d(TAG,
                             String.format(
                                     "onConnectionInitiated(endpointId=%s, endpointName=%s)",
                                     endpointId, connectionInfo.getEndpointName()));
@@ -113,13 +111,13 @@ public abstract class ConnectionsActivity extends AppCompatActivity
 
                 @Override
                 public void onConnectionResult(String endpointId, ConnectionResolution result) {
-                    logD(String.format("onConnectionResponse(endpointId=%s, result=%s)", endpointId, result));
+                    Log.d(TAG,String.format("onConnectionResponse(endpointId=%s, result=%s)", endpointId, result));
 
                     // We're no longer connecting
                     mIsConnecting = false;
 
                     if (!result.getStatus().isSuccess()) {
-                        logW(
+                        Log.w(TAG,
                                 String.format(
                                         "Connection failed. Received status %s.",
                                         ConnectionsActivity.toString(result.getStatus())));
@@ -132,7 +130,7 @@ public abstract class ConnectionsActivity extends AppCompatActivity
                 @Override
                 public void onDisconnected(String endpointId) {
                     if (!mEstablishedConnections.containsKey(endpointId)) {
-                        logW("Unexpected disconnection from endpoint " + endpointId);
+                        Log.w(TAG,"Unexpected disconnection from endpoint " + endpointId);
                         return;
                     }
                     disconnectedFromEndpoint(mEstablishedConnections.get(endpointId));
@@ -144,13 +142,13 @@ public abstract class ConnectionsActivity extends AppCompatActivity
             new PayloadCallback() {
                 @Override
                 public void onPayloadReceived(String endpointId, Payload payload) {
-                    logD(String.format("onPayloadReceived(endpointId=%s, payload=%s)", endpointId, payload));
+                    Log.d(TAG,String.format("onPayloadReceived(endpointId=%s, payload=%s)", endpointId, payload));
                     onReceive(mEstablishedConnections.get(endpointId), payload);
                 }
 
                 @Override
                 public void onPayloadTransferUpdate(String endpointId, PayloadTransferUpdate update) {
-                    logD(
+                    Log.d(TAG,
                             String.format(
                                     "onPayloadTransferUpdate(endpointId=%s, update=%s)", endpointId, update));
                 }
@@ -193,21 +191,22 @@ public abstract class ConnectionsActivity extends AppCompatActivity
     /** We've connected to Nearby Connections' GoogleApiClient. */
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        logV("onConnected");
+        Log.v(TAG,"onConnected");
     }
 
     /** We've been temporarily disconnected from Nearby Connections' GoogleApiClient. */
     @CallSuper
     @Override
     public void onConnectionSuspended(int reason) {
-        logW(String.format("onConnectionSuspended(reason=%s)", reason));
+        Log.w(TAG,String.format("onConnectionSuspended(reason=%s)", reason));
         resetState();
     }
+
 
     /** We are unable to connect to Nearby Connections' GoogleApiClient. Oh uh. */
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        logW(
+        Log.w(TAG,
                 String.format(
                         "onConnectionFailed(%s)",
                         ConnectionsActivity.toString(new Status(connectionResult.getErrorCode()))));
@@ -249,11 +248,11 @@ public abstract class ConnectionsActivity extends AppCompatActivity
                             @Override
                             public void onResult(@NonNull Connections.StartAdvertisingResult result) {
                                 if (result.getStatus().isSuccess()) {
-                                    logV("Now advertising endpoint " + result.getLocalEndpointName());
+                                    Log.v(TAG,"Now advertising endpoint " + result.getLocalEndpointName());
                                     onAdvertisingStarted();
                                 } else {
                                     mIsAdvertising = false;
-                                    logW(
+                                    Log.w(TAG,
                                             String.format(
                                                     "Advertising failed. Received status %s.",
                                                     ConnectionsActivity.toString(result.getStatus())));
@@ -298,7 +297,7 @@ public abstract class ConnectionsActivity extends AppCompatActivity
                             @Override
                             public void onResult(@NonNull Status status) {
                                 if (!status.isSuccess()) {
-                                    logW(
+                                    Log.w(TAG,
                                             String.format(
                                                     "acceptConnection failed. %s", ConnectionsActivity.toString(status)));
                                 }
@@ -314,7 +313,7 @@ public abstract class ConnectionsActivity extends AppCompatActivity
                             @Override
                             public void onResult(@NonNull Status status) {
                                 if (!status.isSuccess()) {
-                                    logW(
+                                    Log.w(TAG,
                                             String.format(
                                                     "rejectConnection failed. %s", ConnectionsActivity.toString(status)));
                                 }
@@ -336,7 +335,7 @@ public abstract class ConnectionsActivity extends AppCompatActivity
                 new EndpointDiscoveryCallback() {
                     @Override
                     public void onEndpointFound(String endpointId, DiscoveredEndpointInfo info) {
-                        logD(
+                        Log.d(TAG,
                                 String.format(
                                         "onEndpointFound(endpointId=%s, serviceId=%s, endpointName=%s)",
                                         endpointId, info.getServiceId(), info.getEndpointName()));
@@ -350,7 +349,7 @@ public abstract class ConnectionsActivity extends AppCompatActivity
 
                     @Override
                     public void onEndpointLost(String endpointId) {
-                        logD(String.format("onEndpointLost(endpointId=%s)", endpointId));
+                        Log.d(TAG,String.format("onEndpointLost(endpointId=%s)", endpointId));
                     }
                 },
                 new DiscoveryOptions(STRATEGY))
@@ -362,7 +361,7 @@ public abstract class ConnectionsActivity extends AppCompatActivity
                                     onDiscoveryStarted();
                                 } else {
                                     mIsDiscovering = false;
-                                    logW(
+                                    Log.w(TAG,
                                             String.format(
                                                     "Discovering failed. Received status %s.",
                                                     ConnectionsActivity.toString(status)));
@@ -414,11 +413,11 @@ public abstract class ConnectionsActivity extends AppCompatActivity
         // If we already sent out a connection request, wait for it to return
         // before we do anything else. P2P_STAR only allows 1 outgoing connection.
         if (mIsConnecting) {
-            logW("Already connecting, so ignoring this endpoint: " + endpoint);
+            Log.w(TAG,"Already connecting, so ignoring this endpoint: " + endpoint);
             return;
         }
 
-        logV("Sending a connection request to endpoint " + endpoint);
+        Log.v(TAG,"Sending a connection request to endpoint " + endpoint);
         // Mark ourselves as connecting so we don't connect multiple times
         mIsConnecting = true;
 
@@ -430,7 +429,7 @@ public abstract class ConnectionsActivity extends AppCompatActivity
                             @Override
                             public void onResult(@NonNull Status status) {
                                 if (!status.isSuccess()) {
-                                    logW(
+                                    Log.w(TAG,
                                             String.format(
                                                     "requestConnection failed. %s", ConnectionsActivity.toString(status)));
                                     mIsConnecting = false;
@@ -446,13 +445,13 @@ public abstract class ConnectionsActivity extends AppCompatActivity
     }
 
     private void connectedToEndpoint(Endpoint endpoint) {
-        logD(String.format("connectedToEndpoint(endpoint=%s)", endpoint));
+        Log.d(TAG,String.format("connectedToEndpoint(endpoint=%s)", endpoint));
         mEstablishedConnections.put(endpoint.getId(), endpoint);
         onEndpointConnected(endpoint);
     }
 
     private void disconnectedFromEndpoint(Endpoint endpoint) {
-        logD(String.format("disconnectedFromEndpoint(endpoint=%s)", endpoint));
+        Log.d(TAG,String.format("disconnectedFromEndpoint(endpoint=%s)", endpoint));
         mEstablishedConnections.remove(endpoint.getId());
         onEndpointDisconnected(endpoint);
     }
@@ -462,7 +461,7 @@ public abstract class ConnectionsActivity extends AppCompatActivity
 
     /** Someone has connected to us. Override this method to act on the event. */
     protected void onEndpointConnected(Endpoint endpoint) {
-        logI(endpoint.toString());
+        Log.i(TAG,endpoint.toString());
     }
 
     /** Someone has disconnected. Override this method to act on the event. */
@@ -498,7 +497,7 @@ public abstract class ConnectionsActivity extends AppCompatActivity
                             @Override
                             public void onResult(@NonNull Status status) {
                                 if (!status.isSuccess()) {
-                                    logW(
+                                    Log.w(TAG,
                                             String.format(
                                                     "sendUnreliablePayload failed. %s",
                                                     ConnectionsActivity.toString(status)));
@@ -514,8 +513,8 @@ public abstract class ConnectionsActivity extends AppCompatActivity
      * @param payload The data.
      */
     protected void onReceive(Endpoint endpoint, Payload payload) {
-        logD("onReceive: received payload from endpoint " + endpoint);
-        logD("onReceive: the payload was "+payload);
+        Log.d(TAG,"onReceive: received payload from endpoint " + endpoint);
+        Log.d(TAG,"onReceive: the payload was "+payload);
     }
 
     /**
@@ -565,31 +564,7 @@ public abstract class ConnectionsActivity extends AppCompatActivity
         return true;
     }
 
-    @CallSuper
-    protected void logV(String msg) {
-        Log.v(TAG, msg);
-    }
-
-    @CallSuper
-    protected void logD(String msg) {
-        Log.d(TAG, msg);
-    }
-
-    @CallSuper
-    protected void logW(String msg) {
-        Log.w(TAG, msg);
-    }
-
-    @CallSuper
-    protected void logI(String msg) {
-        Log.i(TAG, msg);
-    }
-
-    @CallSuper
-    protected void logE(String msg, Throwable e) {
-        Log.e(TAG, msg, e);
-    }
-
+    
     /** Represents a device we can talk to. */
     protected static class Endpoint {
         @NonNull private final String id;
