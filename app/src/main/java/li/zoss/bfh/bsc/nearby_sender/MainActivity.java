@@ -18,10 +18,7 @@ import com.google.android.gms.nearby.connection.Payload;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.UUID;
-
-import static android.support.v4.app.ActivityCompat.requestPermissions;
 
 public class MainActivity extends ConnectionsActivity {
 
@@ -46,6 +43,7 @@ public class MainActivity extends ConnectionsActivity {
     private State mState = State.UNKNOWN;
     private boolean googleApiClientIsReady = false;
     private AudioRecorder mRecorder;
+    private boolean isPublishing = false;
 
 
     @Override
@@ -70,7 +68,7 @@ public class MainActivity extends ConnectionsActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        setState(State.PUBLISHING);
+                        publishInformation();
                     }
                 });
             }
@@ -101,8 +99,8 @@ public class MainActivity extends ConnectionsActivity {
         if (!hasPermissions(this, REQUIRED_PERMISSIONS)) {
             requestPermissions(REQUIRED_PERMISSIONS, REQUEST_CODE_REQUIRED_PERMISSIONS);
         }
-        setState(State.PUBLISHING);
-        Log.v(TAG,"publishInformation()");
+        setIsPublishing(true);
+        Log.v(TAG, "publishInformation()");
         try {
             ParcelFileDescriptor[] payloadPipe = ParcelFileDescriptor.createPipe();
 
@@ -166,7 +164,7 @@ public class MainActivity extends ConnectionsActivity {
     @Override
     protected void onEndpointConnected(Endpoint endpoint) {
         super.onEndpointConnected(endpoint);
-        setState(State.ADVERTISING_CONNECTED);
+        setState(State.CONNECTED);
     }
 
     @Override
@@ -183,14 +181,18 @@ public class MainActivity extends ConnectionsActivity {
         setState(State.UNKNOWN);
         super.onStop();
     }
+
+    public void setIsPublishing(boolean isPublishing) {
+        this.isPublishing = isPublishing;
+    }
+
     /**
      * States that the App goes through.
      */
     public enum State {
         UNKNOWN,
         ADVERTISING,
-        PUBLISHING,
-        ADVERTISING_CONNECTED,
+        CONNECTED,
         ERROR
 
     }
@@ -222,12 +224,8 @@ public class MainActivity extends ConnectionsActivity {
                     startAdvertising();
                 refreshConnectedClients();
                 break;
-            case ADVERTISING_CONNECTED:
+            case CONNECTED:
                 refreshConnectedClients();
-                break;
-            case PUBLISHING:
-                if (oldState == State.ADVERTISING_CONNECTED)
-                    publishInformation();
                 break;
             case ERROR:
                 break;
