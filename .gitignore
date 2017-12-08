@@ -13,6 +13,7 @@ bin/
 gen/
 out/
 
+
 # Gradle files
 .gradle/*
 gradle/
@@ -56,3 +57,6 @@ google-services.json
 freeline.py
 freeline/
 freeline_project_description.json
+
+#MP3 Files
+app/src/main/res/raw/*.mp3

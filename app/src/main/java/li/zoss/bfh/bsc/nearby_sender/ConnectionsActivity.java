@@ -63,7 +63,7 @@ public abstract class ConnectionsActivity extends AppCompatActivity
      * The connection strategy we'll use for Nearby Connections. In this case, we've decided on
      * P2P_STAR, which is a combination of Bluetooth Classic and WiFi Hotspots.
      */
-    private static final Strategy STRATEGY = Strategy.P2P_STAR;
+    private static final Strategy STRATEGY = Strategy.P2P_CLUSTER;
 
     /** We'll talk to Nearby Connections through the GoogleApiClient. */
     private GoogleApiClient mGoogleApiClient;

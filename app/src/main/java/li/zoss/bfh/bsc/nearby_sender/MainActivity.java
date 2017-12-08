@@ -1,7 +1,7 @@
 package li.zoss.bfh.bsc.nearby_sender;
-
-import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.support.annotation.CallSuper;
@@ -16,7 +16,12 @@ import android.widget.Toast;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.Payload;
 
+import org.apache.commons.io.IOUtils;
+
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
 import java.util.UUID;
 
@@ -29,8 +34,7 @@ public class MainActivity extends ConnectionsActivity {
     private final String NAME = "Sender " + UUID.randomUUID();
     private static final int REQUEST_CODE_REQUIRED_PERMISSIONS = 1;
     private static final String[] REQUIRED_PERMISSIONS =
-            new String[] {
-                    Manifest.permission.RECORD_AUDIO
+            new String[]{
             };
 
     //View
@@ -39,11 +43,12 @@ public class MainActivity extends ConnectionsActivity {
     private TextView txtConnectedClients;
     private TextView txtLog;
     private FloatingActionButton btnFloating;
-
     private State mState = State.UNKNOWN;
     private boolean googleApiClientIsReady = false;
     private AudioRecorder mRecorder;
     private boolean isPublishing = false;
+    private Intent intent;
+    private View btnFloating2;
 
 
     @Override
@@ -58,6 +63,7 @@ public class MainActivity extends ConnectionsActivity {
         txtConnectedClients = findViewById(R.id.txtConnectedDevices);
         txtLog = findViewById(R.id.txtLog);
         btnFloating = findViewById(R.id.floatingActionButton);
+        btnFloating2 = findViewById(R.id.floatingActionButton2);
         txtConnectedClients.setText("no Clients connected");
         txtLog.setText("Log:");
         txtID.setText(NAME);
@@ -68,7 +74,20 @@ public class MainActivity extends ConnectionsActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        publishInformation();
+                        publishInformation("Bern Wankdorf");
+                    }
+                });
+            }
+        });
+        btnFloating2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Uri uri = Uri.parse("");
+                        Log.i(TAG, "run: " + uri.toString());
+                        publishInformation(R.raw.sentence, "mp3");
                     }
                 });
             }
@@ -91,30 +110,55 @@ public class MainActivity extends ConnectionsActivity {
         }
     }
 
-    private void getConnectionInfo(Endpoint endpoint){
 
-    }
-
-    private void publishInformation() {
-        if (!hasPermissions(this, REQUIRED_PERMISSIONS)) {
-            requestPermissions(REQUIRED_PERMISSIONS, REQUEST_CODE_REQUIRED_PERMISSIONS);
-        }
-        setIsPublishing(true);
-        Log.v(TAG, "publishInformation()");
-        try {
-            ParcelFileDescriptor[] payloadPipe = ParcelFileDescriptor.createPipe();
-
-            // Send the first half of the payload (the read side) to Nearby Connections.
-            send(Payload.fromStream(payloadPipe[0]));
-
-            // Use the second half of the payload (the write side) in AudioRecorder.
-            mRecorder = new AudioRecorder(payloadPipe[1]);
-            mRecorder.start();
-        } catch (IOException e) {
-            Log.e(TAG, "publishInformation failed", e);
+    private void publishInformation(String string) {
+        if (getState().equals(State.CONNECTED)) {
+            setIsPublishing(true);
+            Log.v(TAG, "publishInformation()");
+            send(Payload.fromBytes(string.getBytes()));
+            setIsPublishing(false);
         }
     }
-    /** The user has accepted (or denied) our permission request. */
+
+
+    private void publishInformation(int rawRessource, String type) {
+        if (getState().equals(State.CONNECTED)) {
+
+            if (!hasPermissions(this, REQUIRED_PERMISSIONS)) {
+                requestPermissions(REQUIRED_PERMISSIONS, REQUEST_CODE_REQUIRED_PERMISSIONS);
+            }
+            // Open the ParcelFileDescriptor for this URI with read access.
+            ParcelFileDescriptor pfd = null;
+
+
+            Payload filePayload = null;
+            try {
+                filePayload = Payload.fromFile(stream2file(getResources().openRawResource(rawRessource)));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+            //send(Payload.fromBytes(type.getBytes()));
+            send(filePayload);
+
+        }
+    }
+    public static final String PREFIX = "stream2file";
+    public static final String SUFFIX = ".tmp";
+
+    public static File stream2file (InputStream in) throws IOException {
+        final File tempFile = File.createTempFile(PREFIX, SUFFIX);
+        tempFile.deleteOnExit();
+        try (FileOutputStream out = new FileOutputStream(tempFile)) {
+            IOUtils.copy(in, out);
+        }
+        return tempFile;
+    }
+
+    /**
+     * The user has accepted (or denied) our permission request.
+     */
     @CallSuper
     @Override
     public void onRequestPermissionsResult(
@@ -127,7 +171,7 @@ public class MainActivity extends ConnectionsActivity {
                     return;
                 }
             }
-            recreate();
+            ;
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
@@ -213,7 +257,7 @@ public class MainActivity extends ConnectionsActivity {
     private void onStateChanged(State oldState, State state) {
         switch (state) {
             case UNKNOWN:
-                if(googleApiClientIsReady) {
+                if (googleApiClientIsReady) {
                     disconnectFromAllEndpoints();
                     stopAdvertising();
                 }
