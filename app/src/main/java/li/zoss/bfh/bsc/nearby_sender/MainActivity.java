@@ -1,4 +1,6 @@
 package li.zoss.bfh.bsc.nearby_sender;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -8,8 +10,11 @@ import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,6 +22,7 @@ import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.Payload;
 
 import org.apache.commons.io.IOUtils;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -56,6 +62,7 @@ public class MainActivity extends ConnectionsActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
+
 
         //View
         txtID = findViewById(R.id.txtIDvalue);
@@ -113,9 +120,10 @@ public class MainActivity extends ConnectionsActivity {
 
     private void publishInformation(String string) {
         if (getState().equals(State.CONNECTED)) {
+            JSONObject jsonObject = NotificationPayload.getJSON(NotType.NEXT_STOP,"Münsingen", true);
             setIsPublishing(true);
             Log.v(TAG, "publishInformation()");
-            send(Payload.fromBytes(string.getBytes()));
+            send(Payload.fromBytes(jsonObject.toString().getBytes()));
             setIsPublishing(false);
         }
     }

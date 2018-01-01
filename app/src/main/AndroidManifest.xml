@@ -1,28 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="li.zoss.bfh.bsc.nearby_sender">
+
     <!-- Required for Nearby Connections -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:resizeableActivity="false"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="false"
-        android:resizeableActivity="false"
         android:theme="@style/AppTheme">
         <activity
-            android:name="li.zoss.bfh.bsc.nearby_sender.MainActivity"
+            android:name=".MainActivity"
+            android:keepScreenOn="true"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
