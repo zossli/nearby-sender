@@ -1,11 +1,22 @@
 package li.zoss.bfh.bsc.nearby_sender;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 /**
  * Created by Reto on 01.01.2018.
  */
 
 class TrainRun {
-    public Station[] s1 = {
+
+    public void setAll(ArrayList<Train> list) {
+        list.add(new Train("S1",s1BernThun));
+        list.add(new Train("RE",redomo));
+        list.add(new Train("RE",rezweisimmen));
+
+    }
+    public Station[] s1BernThun = {
             new Station("Bern", false, ""),
             new Station("Bern Wankdorf", false, ""),
             new Station("Ostermundigen", false, ""),
@@ -27,9 +38,9 @@ class TrainRun {
             new Station("Burgholz",false,""),
             new Station("Oey-Diemtigen",false,""),
             new Station("Erlenbach im Simmental",false,""),
-            new Station("Ringoldingen",false,""),
-            new Station("Därstetten",false,""),
-            new Station("Weissenburg",false,""),
+            new Station("Ringoldingen",true,""),
+            new Station("Därstetten",true,""),
+            new Station("Weissenburg",true,""),
             new Station("Oberwil im Simmental",false,""),
             new Station("Enge im Simmental",false,""),
             new Station("Boltigen",false,""),
@@ -40,13 +51,13 @@ class TrainRun {
             new Station("Münsingen", false, ""),
             new Station("Thun", false, ""),
             new Station("Spiez",false,""),
-            new Station("Mülenen",false,""),
+            new Station("Mülenen",true,""),
             new Station("Reichenbach im Kandertal",false,""),
             new Station("Frutigen",false,""),
             new Station("Kandersteg",false,""),
             new Station("Goppenstein",false,""),
             new Station("Hohtenn",false,""),
-            new Station("Ausserberg",false,""),
+            new Station("Ausserberg",true,""),
             new Station("Eggerberg",false,""),
             new Station("Lalden",false,""),
             new Station("Brig",false,""),
@@ -54,4 +65,6 @@ class TrainRun {
             new Station("Varzo",false,""),
             new Station("Domodossola (I)",false,"")
     };
+
+
 }

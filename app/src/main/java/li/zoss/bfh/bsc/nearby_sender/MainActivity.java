@@ -1,7 +1,6 @@
 package li.zoss.bfh.bsc.nearby_sender;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.support.annotation.CallSuper;
@@ -10,6 +9,13 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,10 +30,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.UUID;
 
-public class MainActivity extends ConnectionsActivity {
+public class MainActivity extends ConnectionsActivity implements AdapterView.OnItemSelectedListener {
 
     private String TAG = "MainActivity";
 
@@ -50,15 +57,27 @@ public class MainActivity extends ConnectionsActivity {
     private AudioRecorder mRecorder;
     private boolean isPublishing = false;
     private Intent intent;
-    private View btnFloating2;
+    private Spinner spinnerTrainList;
+    private SeekBar numDelay;
+    private Button btnSendDelay;
+
+    private ArrayList<Train> mTrainList = new ArrayList<>();
     private Train mTrain;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+
+        //Create some Trains
+        TrainRun trainRun = new TrainRun();
+        trainRun.setAll(mTrainList);
+
+        //set current Train
+        mTrain = mTrainList.get(0);
 
 
         //View
@@ -67,10 +86,14 @@ public class MainActivity extends ConnectionsActivity {
         txtConnectedClients = findViewById(R.id.txtConnectedDevices);
         txtLog = findViewById(R.id.txtLog);
         btnFloating = findViewById(R.id.floatingActionButton);
-        btnFloating2 = findViewById(R.id.floatingActionButton2);
+        spinnerTrainList = findViewById(R.id.spinnerTrainList);
+        btnSendDelay = findViewById(R.id.btnSendDelay);
+        numDelay = findViewById(R.id.sbarDelay);
+
+
         txtConnectedClients.setText("no Clients connected");
         txtLog.setText("Log:");
-        txtID.setText(NAME);
+        txtID.setText(NAME.substring(0,12)+"...");
         txtState.setText(mState.toString());
         btnFloating.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -78,33 +101,48 @@ public class MainActivity extends ConnectionsActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        publishInformation(mTrain.getNext());
+                        mTrain.setNextValue();
+                        publishNextStop(mTrain.getNext());
                     }
                 });
             }
         });
-        btnFloating2.setOnClickListener(new View.OnClickListener() {
+        btnSendDelay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Uri uri = Uri.parse("");
-                        Log.i(TAG, "run: " + uri.toString());
-                        publishInformation(R.raw.sentence, "mp3");
+                        publishDelay(""+numDelay.getProgress());
                     }
                 });
             }
         });
+        numDelay.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                btnSendDelay.setText("send " +progress+" min");
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, mTrainList);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerTrainList.setAdapter(adapter);
+        spinnerTrainList.setOnItemSelectedListener(this);
+
+
+
         setState(State.UNKNOWN);
-
-
-        //Set Current Train Information
-        TrainRun trainRun = new TrainRun();
-        mTrain = new Train("RE", trainRun.rezweisimmen);
-
-
-
     }
 
     @Override
@@ -122,9 +160,19 @@ public class MainActivity extends ConnectionsActivity {
     }
 
 
-    private void publishInformation(Station station) {
+
+    private void publishNextStop(Station station) {
         if (getState().equals(State.CONNECTED)) {
-            JSONObject jsonObject = NotificationPayload.getNextStopJSON(station.getStationName(), station.getStationRequestStop(), mTrain.getCurrentNext());
+            JSONObject jsonObject = NotificationPayload.getNextStopJSON(station.getStationName(), station.getStationRequestStop(), mTrain.getNext());
+            setIsPublishing(true);
+            send(Payload.fromBytes(jsonObject.toString().getBytes()));
+            setIsPublishing(false);
+        }
+    }
+    private void publishDelay(String delay) {
+        Log.i(TAG, "publishDelay: "+delay);
+        if (getState().equals(State.CONNECTED)) {
+            JSONObject jsonObject = NotificationPayload.getDelayJSON(delay);
             setIsPublishing(true);
             send(Payload.fromBytes(jsonObject.toString().getBytes()));
             setIsPublishing(false);
@@ -132,7 +180,7 @@ public class MainActivity extends ConnectionsActivity {
     }
 
 
-    private void publishInformation(int rawRessource, String type) {
+    private void publishNextStop(int rawRessource, String type) {
         if (getState().equals(State.CONNECTED)) {
 
             if (!hasPermissions(this, REQUIRED_PERMISSIONS)) {
@@ -189,7 +237,7 @@ public class MainActivity extends ConnectionsActivity {
                     case TRAIN_INFO:
                         break;
                     case GET_TRAIN:
-                        JSONObject jsonPayload = NotificationPayload.getTrainInfo(mTrain.getTrain(),mTrain.getDirection());
+                        JSONObject jsonPayload = NotificationPayload.getTrainInfo(mTrain.getTrain(),mTrain.getDirection(), mTrain.getNext());
                         send(Payload.fromBytes(jsonPayload.toString().getBytes()), endpoint);
                         break;
                 }
@@ -274,6 +322,18 @@ public class MainActivity extends ConnectionsActivity {
 
     public void setIsPublishing(boolean isPublishing) {
         this.isPublishing = isPublishing;
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        Log.i(TAG, "onItemSelected: "+mTrainList.get(position));
+        mTrain = mTrainList.get(position);
+        mTrain.setNextValue(1);
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+        Log.i(TAG, "onNothingSelected: ");
     }
 
     /**
