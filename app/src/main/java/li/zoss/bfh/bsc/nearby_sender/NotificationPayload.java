@@ -10,21 +10,32 @@ import java.lang.reflect.Type;
  */
 
 public class NotificationPayload {
-    public static JSONObject getJSON(NotType type, String station, Boolean requestNeeded) {
+    public static JSONObject getNextStopJSON(String station, Boolean requestNeeded, Station nextStop) {
         JSONObject jsonObject = new JSONObject();
         try {
-            switch (type) {
-                case NEXT_STOP:
-                    jsonObject.put("Type", NotType.NEXT_STOP);
-                    jsonObject.put("requestNeeded", requestNeeded);
-                    jsonObject.put("station", station);
-                    break;
-                case DELAY:
-                    break;
-                case INFO:
-                    break;
-            }
-        } catch (JSONException e) {
+            jsonObject.put("Type", NotType.NEXT_STOP);
+            jsonObject.put("requestNeeded", requestNeeded);
+            jsonObject.put("station", station);
+
+        } catch (
+                JSONException e)
+
+        {
+            e.printStackTrace();
+        }
+        return jsonObject;
+    }
+    public static JSONObject getTrainInfo(String trainInfo, String direction) {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("Type", NotType.TRAIN_INFO);
+            jsonObject.put("trainInfo", trainInfo);
+            jsonObject.put("direction", direction);
+
+        } catch (
+                JSONException e)
+
+        {
             e.printStackTrace();
         }
         return jsonObject;

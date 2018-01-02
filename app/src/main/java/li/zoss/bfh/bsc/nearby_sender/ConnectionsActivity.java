@@ -489,8 +489,22 @@ public abstract class ConnectionsActivity extends AppCompatActivity
     protected void send(Payload payload) {
         send(payload, mEstablishedConnections.keySet());
     }
-
-    private void send(Payload payload, Set<String> endpoints) {
+    protected void send(Payload payload,  Endpoint endpoint) {
+        Nearby.Connections.sendPayload(mGoogleApiClient, endpoint.getId(), payload)
+                .setResultCallback(
+                        new ResultCallback<Status>() {
+                            @Override
+                            public void onResult(@NonNull Status status) {
+                                if (!status.isSuccess()) {
+                                    Log.w(TAG,
+                                            String.format(
+                                                    "sendUnreliablePayload failed. %s",
+                                                    ConnectionsActivity.toString(status)));
+                                }
+                            }
+                        });
+    }
+    protected void send(Payload payload, Set<String> endpoints) {
         Nearby.Connections.sendPayload(mGoogleApiClient, new ArrayList<>(endpoints), payload)
                 .setResultCallback(
                         new ResultCallback<Status>() {
@@ -513,8 +527,7 @@ public abstract class ConnectionsActivity extends AppCompatActivity
      * @param payload The data.
      */
     protected void onReceive(Endpoint endpoint, Payload payload) {
-        Log.d(TAG,"onReceive: received payload from endpoint " + endpoint);
-        Log.d(TAG,"onReceive: the payload was "+payload);
+
     }
 
     /**

@@ -1,6 +1,4 @@
 package li.zoss.bfh.bsc.nearby_sender;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -10,11 +8,8 @@ import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,6 +17,7 @@ import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.Payload;
 
 import org.apache.commons.io.IOUtils;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -55,6 +51,7 @@ public class MainActivity extends ConnectionsActivity {
     private boolean isPublishing = false;
     private Intent intent;
     private View btnFloating2;
+    private Train mTrain;
 
 
     @Override
@@ -81,7 +78,7 @@ public class MainActivity extends ConnectionsActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        publishInformation("Bern Wankdorf");
+                        publishInformation(mTrain.getNext());
                     }
                 });
             }
@@ -101,6 +98,13 @@ public class MainActivity extends ConnectionsActivity {
         });
         setState(State.UNKNOWN);
 
+
+        //Set Current Train Information
+        TrainRun trainRun = new TrainRun();
+        mTrain = new Train("RE", trainRun.rezweisimmen);
+
+
+
     }
 
     @Override
@@ -118,11 +122,10 @@ public class MainActivity extends ConnectionsActivity {
     }
 
 
-    private void publishInformation(String string) {
+    private void publishInformation(Station station) {
         if (getState().equals(State.CONNECTED)) {
-            JSONObject jsonObject = NotificationPayload.getJSON(NotType.NEXT_STOP,"Münsingen", true);
+            JSONObject jsonObject = NotificationPayload.getNextStopJSON(station.getStationName(), station.getStationRequestStop(), mTrain.getCurrentNext());
             setIsPublishing(true);
-            Log.v(TAG, "publishInformation()");
             send(Payload.fromBytes(jsonObject.toString().getBytes()));
             setIsPublishing(false);
         }
@@ -164,6 +167,39 @@ public class MainActivity extends ConnectionsActivity {
         return tempFile;
     }
 
+    @Override
+    protected void onReceive(Endpoint endpoint, Payload payload) {
+        super.onReceive(endpoint, payload);
+        if(payload.getType() == Payload.Type.BYTES)
+        {
+            try {
+                JSONObject jsonObject = new JSONObject(new String(payload.asBytes()));
+                Log.i(TAG, "onReceive: "+jsonObject);
+                switch (NotType.valueOf((jsonObject.getString("Type")))){
+                    case NEXT_STOP:
+                        break;
+                    case REQUEST_STOP:
+                        txtLog.append("\n");
+                        txtLog.append("Requested Stop for: " + jsonObject.get("forStation").toString());
+                        break;
+                    case DELAY:
+                        break;
+                    case INFO:
+                        break;
+                    case TRAIN_INFO:
+                        break;
+                    case GET_TRAIN:
+                        JSONObject jsonPayload = NotificationPayload.getTrainInfo(mTrain.getTrain(),mTrain.getDirection());
+                        send(Payload.fromBytes(jsonPayload.toString().getBytes()), endpoint);
+                        break;
+                }
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     /**
      * The user has accepted (or denied) our permission request.
      */
@@ -183,6 +219,8 @@ public class MainActivity extends ConnectionsActivity {
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
+
+
 
     @Override
     protected String getName() {
