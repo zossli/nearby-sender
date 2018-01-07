@@ -490,6 +490,8 @@ public abstract class ConnectionsActivity extends AppCompatActivity
         send(payload, mEstablishedConnections.keySet());
     }
     protected void send(Payload payload,  Endpoint endpoint) {
+        Log.i(TAG, "send: payload:"+new String(payload.asBytes()));
+
         Nearby.Connections.sendPayload(mGoogleApiClient, endpoint.getId(), payload)
                 .setResultCallback(
                         new ResultCallback<Status>() {

@@ -8,50 +8,74 @@ import org.json.JSONObject;
 public class NotificationPayload {
     private static String TAG = "NotificationPayload";
 
-    public static JSONObject getNextStopJSON(String station, Boolean requestNeeded, Station nextStop) {
+    public static JSONObject getNextStopJSON(Station nextStop) {
         JSONObject jsonObject = new JSONObject();
-        try {
-            jsonObject.put("Type", NotType.NEXT_STOP);
-            jsonObject.put("requestNeeded", requestNeeded);
-            jsonObject.put("station", station);
-
-        } catch (
-                JSONException e)
-
-        {
-            e.printStackTrace();
-        }
+        jsonObject=addToJSON(jsonObject, "Type", NotType.NEXT_STOP);
+        jsonObject=addToJSON(jsonObject, "trainNextStopRequestNeeded", nextStop.getStationRequestStop());
+        jsonObject=addToJSON(jsonObject, "trainNextStop", nextStop.getStationName());
+        jsonObject=addToJSON(jsonObject, "trainNextStationInfo", nextStop.getStationInfo());
         return jsonObject;
     }
+
     public static JSONObject getDelayJSON(String delay) {
         JSONObject jsonObject = new JSONObject();
-        try {
-            jsonObject.put("Type", NotType.DELAY);
-                jsonObject.put("delay", delay);
-
-        } catch (
-                JSONException e)
-
-        {
-            e.printStackTrace();
-        }
+        jsonObject=addToJSON(jsonObject, "Type", NotType.DELAY);
+        jsonObject=addToJSON(jsonObject, "trainDelay", delay+" min");
         return jsonObject;
     }
-    public static JSONObject getTrainInfo(String trainInfo, String direction, Station nextStop) {
+
+    public static JSONObject soundWillPlay(Boolean willPlay) {
         JSONObject jsonObject = new JSONObject();
-        try {
-            jsonObject.put("Type", NotType.TRAIN_INFO);
-            jsonObject.put("trainInfo", trainInfo);
-            jsonObject.put("trainDirection", direction);
-            jsonObject.put("trainNextStop", nextStop.getStationName());
-            jsonObject.put("trainNextStopRequestNeeded", nextStop.getStationRequestStop());
-            Log.i(TAG, "getTrainInfo: traininfo: json is "+jsonObject.toString());
-        } catch (
-                JSONException e)
-
-        {
-            e.printStackTrace();
-        }
+        jsonObject=addToJSON(jsonObject, "Type", NotType.WITH_SOUND_RESPONSE);
+        jsonObject=addToJSON(jsonObject, "willPlaySound", willPlay);
         return jsonObject;
     }
+
+    public static JSONObject getSpecialCoachInfo(Train train) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject=addToJSON(jsonObject, "Type", NotType.INFO);
+        jsonObject=addToJSON(jsonObject, "trainSpecialCoachInfo", train.getSpecialCoachInfo());
+        return jsonObject;
+    }
+
+    public static JSONObject getTrainInfo(Train train, String delay) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject=addToJSON(jsonObject, "Type", NotType.TRAIN_INFO);
+        jsonObject=addToJSON(jsonObject, "trainInfo", train.getTrain());
+        jsonObject=addToJSON(jsonObject, "trainSpecialCoachInfo", train.getSpecialCoachInfo());
+        jsonObject=addToJSON(jsonObject, "trainDirection", train.getDirection());
+        jsonObject=addToJSON(jsonObject, "trainNextStop", train.getNext().getStationName());
+        jsonObject=addToJSON(jsonObject, "trainNextStationInfo", train.getNext().getStationInfo());
+        jsonObject=addToJSON(jsonObject, "trainNextStopRequestNeeded", train.getNext().getStationRequestStop());
+        jsonObject=addToJSON(jsonObject, "trainCurrentDelay", delay);
+        return jsonObject;
+    }
+
+    private static JSONObject addToJSON(JSONObject json, String key, NotType value) {
+        try {
+            json.put(key, value);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return json;
+    }
+
+    private static JSONObject addToJSON(JSONObject json, String key, String value) {
+        try {
+            json.put(key, value);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return json;
+    }
+
+    private static JSONObject addToJSON(JSONObject json, String key, Boolean value) {
+        try {
+            json.put(key, value);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return json;
+    }
+
 }

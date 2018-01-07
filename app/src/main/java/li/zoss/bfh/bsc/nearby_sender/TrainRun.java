@@ -11,13 +11,12 @@ import java.util.Set;
 class TrainRun {
 
     public void setAll(ArrayList<Train> list) {
-        list.add(new Train("S1",s1BernThun));
+        list.add(new Train("S1",s1BernThun,"Achtung: Kein Ausstieg aus diesem Wagen in Münsingen. Perron zu kurz. Bitte begeben Sie sich zum Aussteigen in den vorderen Wagen."));
         list.add(new Train("RE",redomo));
         list.add(new Train("RE",rezweisimmen));
 
     }
     public Station[] s1BernThun = {
-            new Station("Bern", false, ""),
             new Station("Bern Wankdorf", false, ""),
             new Station("Ostermundigen", false, ""),
             new Station("Gümligen",false,""),
@@ -29,7 +28,6 @@ class TrainRun {
             new Station("Thun",false, "Endbahnhof, bitte alle aussteigen.")
     };
     public Station[] rezweisimmen = {
-            new Station("Bern", false, ""),
             new Station("Münsingen", false, ""),
             new Station("Thun", false, ""),
             new Station("Spiez",false,""),
@@ -47,7 +45,6 @@ class TrainRun {
             new Station("Zweisimmen",false,"Endbahnhof, bitte alle aussteigen.")
     };
     public Station[] redomo = {
-            new Station("Bern", false, ""),
             new Station("Münsingen", false, ""),
             new Station("Thun", false, ""),
             new Station("Spiez",false,""),

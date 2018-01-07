@@ -1,4 +1,5 @@
 package li.zoss.bfh.bsc.nearby_sender;
+
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -30,8 +31,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.UUID;
 
 public class MainActivity extends ConnectionsActivity implements AdapterView.OnItemSelectedListener {
@@ -60,6 +64,7 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
     private Spinner spinnerTrainList;
     private SeekBar numDelay;
     private Button btnSendDelay;
+    private final Map<String, Endpoint> endpointsRequestedSound = new HashMap<>();
 
     private ArrayList<Train> mTrainList = new ArrayList<>();
     private Train mTrain;
@@ -93,7 +98,7 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
 
         txtConnectedClients.setText("no Clients connected");
         txtLog.setText("Log:");
-        txtID.setText(NAME.substring(0,12)+"...");
+        txtID.setText(NAME.substring(0, 12) + "...");
         txtState.setText(mState.toString());
         btnFloating.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -113,7 +118,7 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        publishDelay(""+numDelay.getProgress());
+                        publishDelay("" + numDelay.getProgress());
                     }
                 });
             }
@@ -121,7 +126,7 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
         numDelay.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                btnSendDelay.setText("send " +progress+" min");
+                btnSendDelay.setText("send " + progress + " min");
             }
 
             @Override
@@ -134,12 +139,12 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
 
             }
         });
+        numDelay.setProgress(0);
 
         ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, mTrainList);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerTrainList.setAdapter(adapter);
         spinnerTrainList.setOnItemSelectedListener(this);
-
 
 
         setState(State.UNKNOWN);
@@ -154,23 +159,46 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
         txtConnectedClients.setText("");
         Iterator<Endpoint> iterator = getConnectedEndpoints().iterator();
         while (iterator.hasNext()) {
-            String endpoint = iterator.next().getName();
-            txtConnectedClients.append(endpoint + "\n");
+            Endpoint endpoint = iterator.next();
+            String with = endpointsRequestedSound.containsKey(endpoint.getId()) ? "S> " : "";
+            txtConnectedClients.append(with + endpoint.getName().substring(0, 12) + "..." + "\n");
         }
     }
-
 
 
     private void publishNextStop(Station station) {
         if (getState().equals(State.CONNECTED)) {
-            JSONObject jsonObject = NotificationPayload.getNextStopJSON(station.getStationName(), station.getStationRequestStop(), mTrain.getNext());
+            JSONObject jsonObject = NotificationPayload.getNextStopJSON(mTrain.getNext());
             setIsPublishing(true);
             send(Payload.fromBytes(jsonObject.toString().getBytes()));
+            ArrayList sendSound = new ArrayList<Integer>();
+            sendSound.add(R.raw.jingle);
+            sendSound.add(R.raw.wankdorf);
+            publishNextStop(sendSound, "mp3");
             setIsPublishing(false);
         }
     }
+
+
+    private void publishNextStop(ArrayList<Integer> rawRessourcesList, String type) {
+        if (getState().equals(State.CONNECTED) && endpointsRequestedSound.size() > 0) {
+            try {
+                SequenceInputStream sequenceInputStream = new SequenceInputStream(
+                        getResources().openRawResource(rawRessourcesList.get(0)),
+                        getResources().openRawResource(rawRessourcesList.get(1)));
+
+                send(Payload.fromStream(sequenceInputStream), endpointsRequestedSound.keySet());
+
+                sequenceInputStream.read();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
     private void publishDelay(String delay) {
-        Log.i(TAG, "publishDelay: "+delay);
+        Log.i(TAG, "publishDelay: " + delay);
         if (getState().equals(State.CONNECTED)) {
             JSONObject jsonObject = NotificationPayload.getDelayJSON(delay);
             setIsPublishing(true);
@@ -180,34 +208,8 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
     }
 
 
-    private void publishNextStop(int rawRessource, String type) {
-        if (getState().equals(State.CONNECTED)) {
-
-            if (!hasPermissions(this, REQUIRED_PERMISSIONS)) {
-                requestPermissions(REQUIRED_PERMISSIONS, REQUEST_CODE_REQUIRED_PERMISSIONS);
-            }
-            // Open the ParcelFileDescriptor for this URI with read access.
-            ParcelFileDescriptor pfd = null;
-
-
-            Payload filePayload = null;
-            try {
-                filePayload = Payload.fromFile(stream2file(getResources().openRawResource(rawRessource)));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-
-            //send(Payload.fromBytes(type.getBytes()));
-            send(filePayload);
-
-        }
-    }
-    public static final String PREFIX = "stream2file";
-    public static final String SUFFIX = ".tmp";
-
-    public static File stream2file (InputStream in) throws IOException {
-        final File tempFile = File.createTempFile(PREFIX, SUFFIX);
+    public static File stream2file(InputStream in) throws IOException {
+        final File tempFile = File.createTempFile("stream2file", ".tmp");
         tempFile.deleteOnExit();
         try (FileOutputStream out = new FileOutputStream(tempFile)) {
             IOUtils.copy(in, out);
@@ -218,12 +220,11 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
     @Override
     protected void onReceive(Endpoint endpoint, Payload payload) {
         super.onReceive(endpoint, payload);
-        if(payload.getType() == Payload.Type.BYTES)
-        {
+        if (payload.getType() == Payload.Type.BYTES) {
             try {
                 JSONObject jsonObject = new JSONObject(new String(payload.asBytes()));
-                Log.i(TAG, "onReceive: "+jsonObject);
-                switch (NotType.valueOf((jsonObject.getString("Type")))){
+                Log.i(TAG, "onReceive: " + jsonObject);
+                switch (NotType.valueOf((jsonObject.getString("Type")))) {
                     case NEXT_STOP:
                         break;
                     case REQUEST_STOP:
@@ -237,8 +238,29 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
                     case TRAIN_INFO:
                         break;
                     case GET_TRAIN:
-                        JSONObject jsonPayload = NotificationPayload.getTrainInfo(mTrain.getTrain(),mTrain.getDirection(), mTrain.getNext());
+                        JSONObject jsonPayload = NotificationPayload.getTrainInfo(mTrain, numDelay.getProgress() + " min");
                         send(Payload.fromBytes(jsonPayload.toString().getBytes()), endpoint);
+                        boolean alreadyReceived = false;
+                        if (jsonObject.has("coachInfoAlreadyReceived"))
+                            alreadyReceived = jsonObject.getBoolean("coachInfoAlreadyReceived");
+                        if (!mTrain.getSpecialCoachInfo().isEmpty() && !alreadyReceived) {
+                            jsonPayload = NotificationPayload.getSpecialCoachInfo(mTrain);
+                            send(Payload.fromBytes(jsonPayload.toString().getBytes()), endpoint);
+                        }
+                        break;
+                    case CONNECTED_TO_SYSTEM:
+                        break;
+                    case WITH_SOUND_REQUEST:
+                        if (jsonObject.getBoolean("willPlaySound"))
+                            endpointsRequestedSound.put(endpoint.getId(), endpoint);
+                        else {
+                            endpointsRequestedSound.remove(endpoint.getId(), endpoint);
+                        }
+                        JSONObject jsonPayloadSound = NotificationPayload.soundWillPlay(endpointsRequestedSound.containsKey(endpoint.getId()));
+                        send(Payload.fromBytes(jsonPayloadSound.toString().getBytes()), endpoint);
+                        refreshConnectedClients();
+                        break;
+                    case WITH_SOUND_RESPONSE:
                         break;
                 }
 
@@ -267,7 +289,6 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
-
 
 
     @Override
@@ -311,6 +332,7 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
         if (getConnectedEndpoints().size() == 0) {
             setState(State.ADVERTISING);
         }
+        endpointsRequestedSound.remove(endpoint.getId());
         refreshConnectedClients();
     }
 
@@ -320,15 +342,25 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
         super.onStop();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        disconnectFromAllEndpoints();
+    }
+
+
     public void setIsPublishing(boolean isPublishing) {
         this.isPublishing = isPublishing;
     }
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        Log.i(TAG, "onItemSelected: "+mTrainList.get(position));
+        Log.i(TAG, "onItemSelected: " + mTrainList.get(position));
         mTrain = mTrainList.get(position);
-        mTrain.setNextValue(1);
+        mTrain.resetTrain();
+        if (getState().equals(State.CONNECTED)) {
+            disconnectFromAllEndpoints();
+        }
     }
 
     @Override
