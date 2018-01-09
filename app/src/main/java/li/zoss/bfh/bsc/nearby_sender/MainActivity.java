@@ -22,6 +22,8 @@ import android.widget.Toast;
 
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.Payload;
+import com.google.android.gms.nearby.connection.PayloadCallback;
+import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
 
 import org.apache.commons.io.IOUtils;
 import org.json.JSONException;
@@ -38,7 +40,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
-public class MainActivity extends ConnectionsActivity implements AdapterView.OnItemSelectedListener {
+public class MainActivity extends ConnectionsActivity implements AdapterView.OnItemSelectedListener{
 
     private String TAG = "MainActivity";
 
@@ -58,8 +60,7 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
     private FloatingActionButton btnFloating;
     private State mState = State.UNKNOWN;
     private boolean googleApiClientIsReady = false;
-    private AudioRecorder mRecorder;
-    private boolean isPublishing = false;
+    private boolean isStreaming=false;
     private Intent intent;
     private Spinner spinnerTrainList;
     private SeekBar numDelay;
@@ -167,55 +168,64 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
 
 
     private void publishNextStop(Station station) {
-        if (getState().equals(State.CONNECTED)) {
+        if (getState().equals(State.CONNECTED) && !isStreaming) {
             JSONObject jsonObject = NotificationPayload.getNextStopJSON(mTrain.getNext());
-            setIsPublishing(true);
             send(Payload.fromBytes(jsonObject.toString().getBytes()));
             ArrayList sendSound = new ArrayList<Integer>();
-            sendSound.add(R.raw.jingle);
-            sendSound.add(R.raw.wankdorf);
-            publishNextStop(sendSound, "mp3");
-            setIsPublishing(false);
+            sendSound.add(R.raw.j2db);
+            if(station.hasStationSound())
+                sendSound.add(station.getStationSound());
+            if(station.hasAdditionalSound())
+                sendSound.addAll(station.getmAdditionalSounds());
+            publishNextStop(sendSound);
+        } else if (isStreaming) {
+            Log.i(TAG, "publishNextStop: already Publishing.");
         }
     }
 
-
-    private void publishNextStop(ArrayList<Integer> rawRessourcesList, String type) {
+    private void publishNextStop(ArrayList<Integer> rawRessourcesList) {
         if (getState().equals(State.CONNECTED) && endpointsRequestedSound.size() > 0) {
             try {
-                SequenceInputStream sequenceInputStream = new SequenceInputStream(
-                        getResources().openRawResource(rawRessourcesList.get(0)),
-                        getResources().openRawResource(rawRessourcesList.get(1)));
+                isStreaming = true;
+                InputStream sequenceInputStream = null;
+                for (int i = 0; rawRessourcesList.size() > 0; i++) {
+                    if (i == 0) {
+                        if (rawRessourcesList.size() > 1) {
+                            sequenceInputStream = new SequenceInputStream(
+                                    getResources().openRawResource(rawRessourcesList.get(0)),
+                                    getResources().openRawResource(rawRessourcesList.get(1)));
+                            rawRessourcesList.remove(0);
+                            rawRessourcesList.remove(0);
+                        }
+                        else {
+                            sequenceInputStream = getResources().openRawResource(rawRessourcesList.get(0));
+                            rawRessourcesList.remove(0);
+                        }
+                    } else {
+                        sequenceInputStream = new SequenceInputStream(
+                                sequenceInputStream,
+                                getResources().openRawResource(rawRessourcesList.get(0)));
+                        rawRessourcesList.remove(0);
+                    }
+                }
 
                 send(Payload.fromStream(sequenceInputStream), endpointsRequestedSound.keySet());
-
                 sequenceInputStream.read();
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
         }
     }
 
     private void publishDelay(String delay) {
         Log.i(TAG, "publishDelay: " + delay);
-        if (getState().equals(State.CONNECTED)) {
+        if (getState().equals(State.CONNECTED) && !isStreaming) {
             JSONObject jsonObject = NotificationPayload.getDelayJSON(delay);
-            setIsPublishing(true);
             send(Payload.fromBytes(jsonObject.toString().getBytes()));
-            setIsPublishing(false);
         }
     }
 
-
-    public static File stream2file(InputStream in) throws IOException {
-        final File tempFile = File.createTempFile("stream2file", ".tmp");
-        tempFile.deleteOnExit();
-        try (FileOutputStream out = new FileOutputStream(tempFile)) {
-            IOUtils.copy(in, out);
-        }
-        return tempFile;
-    }
 
     @Override
     protected void onReceive(Endpoint endpoint, Payload payload) {
@@ -344,14 +354,21 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         disconnectFromAllEndpoints();
+        super.onDestroy();
+
     }
 
-
-    public void setIsPublishing(boolean isPublishing) {
-        this.isPublishing = isPublishing;
+    @Override
+    public void onReceiveUpdate(Endpoint endpoint, PayloadTransferUpdate update) {
+        Log.i(TAG, "onReceiveUpdate: "+update.getStatus());
+        if(isStreaming
+            && update.getStatus() == PayloadTransferUpdate.Status.SUCCESS)
+        {
+            isStreaming = false;
+        }
     }
+
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {

@@ -148,11 +148,13 @@ public abstract class ConnectionsActivity extends AppCompatActivity
 
                 @Override
                 public void onPayloadTransferUpdate(String endpointId, PayloadTransferUpdate update) {
-                    Log.d(TAG,
-                            String.format(
-                                    "onPayloadTransferUpdate(endpointId=%s, update=%s)", endpointId, update));
+                    onReceiveUpdate(mEstablishedConnections.get(endpointId), update);
                 }
             };
+
+    public void onReceiveUpdate(Endpoint endpoint, PayloadTransferUpdate update) {
+
+    }
 
     private void resetState() {
         mDiscoveredEndpoints.clear();
