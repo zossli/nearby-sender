@@ -1,12 +1,7 @@
 package li.zoss.bfh.bsc.nearby_sender;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
-/**
- * Created by Reto on 01.01.2018.
- */
 
 class TrainRun {
 

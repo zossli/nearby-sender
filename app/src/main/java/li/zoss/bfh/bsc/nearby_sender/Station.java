@@ -1,12 +1,7 @@
 package li.zoss.bfh.bsc.nearby_sender;
 
-import android.support.annotation.NonNull;
-
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 class Station {
     private String mName, mInfo;

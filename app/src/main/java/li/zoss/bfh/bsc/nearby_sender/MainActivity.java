@@ -3,7 +3,6 @@ package li.zoss.bfh.bsc.nearby_sender;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.ParcelFileDescriptor;
 import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -14,7 +13,6 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -22,15 +20,11 @@ import android.widget.Toast;
 
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.Payload;
-import com.google.android.gms.nearby.connection.PayloadCallback;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
 
-import org.apache.commons.io.IOUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
@@ -40,7 +34,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
-public class MainActivity extends ConnectionsActivity implements AdapterView.OnItemSelectedListener{
+public class MainActivity extends ConnectionsActivity implements AdapterView.OnItemSelectedListener {
 
     private String TAG = "MainActivity";
 
@@ -48,9 +42,7 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
     private static final String SERVICE_ID = "li.zoss.bfh.bsc";
     private final String NAME = "Sender " + UUID.randomUUID();
     private static final int REQUEST_CODE_REQUIRED_PERMISSIONS = 1;
-    private static final String[] REQUIRED_PERMISSIONS =
-            new String[]{
-            };
+
 
     //View
     private TextView txtID;
@@ -60,8 +52,7 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
     private FloatingActionButton btnFloating;
     private State mState = State.UNKNOWN;
     private boolean googleApiClientIsReady = false;
-    private boolean isStreaming=false;
-    private Intent intent;
+    private boolean isStreaming = false;
     private Spinner spinnerTrainList;
     private SeekBar numDelay;
     private Button btnSendDelay;
@@ -104,13 +95,8 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
         btnFloating.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mTrain.setNextValue();
-                        publishNextStop(mTrain.getNext());
-                    }
-                });
+                mTrain.setNextValue();
+                publishNextStop(mTrain.getNext());
             }
         });
         btnSendDelay.setOnClickListener(new View.OnClickListener() {
@@ -173,9 +159,9 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
             send(Payload.fromBytes(jsonObject.toString().getBytes()));
             ArrayList sendSound = new ArrayList<Integer>();
             sendSound.add(R.raw.j2db);
-            if(station.hasStationSound())
+            if (station.hasStationSound())
                 sendSound.add(station.getStationSound());
-            if(station.hasAdditionalSound())
+            if (station.hasAdditionalSound())
                 sendSound.addAll(station.getmAdditionalSounds());
             publishNextStop(sendSound);
         } else if (isStreaming) {
@@ -196,8 +182,7 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
                                     getResources().openRawResource(rawRessourcesList.get(1)));
                             rawRessourcesList.remove(0);
                             rawRessourcesList.remove(0);
-                        }
-                        else {
+                        } else {
                             sequenceInputStream = getResources().openRawResource(rawRessourcesList.get(0));
                             rawRessourcesList.remove(0);
                         }
@@ -327,6 +312,10 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
 
     @Override
     protected void onConnectionInitiated(Endpoint endpoint, ConnectionInfo connectionInfo) {
+        if (getConnectedEndpoints().size() > 6) {
+            rejectConnection(endpoint);
+            return;
+        }
         acceptConnection(endpoint);
     }
 
@@ -361,10 +350,9 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
 
     @Override
     public void onReceiveUpdate(Endpoint endpoint, PayloadTransferUpdate update) {
-        Log.i(TAG, "onReceiveUpdate: "+update.getStatus());
-        if(isStreaming
-            && update.getStatus() == PayloadTransferUpdate.Status.SUCCESS)
-        {
+        Log.i(TAG, "onReceiveUpdate: " + update.getStatus());
+        if (isStreaming
+                && update.getStatus() == PayloadTransferUpdate.Status.SUCCESS) {
             isStreaming = false;
         }
     }
