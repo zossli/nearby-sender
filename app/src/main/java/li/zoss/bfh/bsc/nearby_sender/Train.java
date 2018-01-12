@@ -1,7 +1,8 @@
 package li.zoss.bfh.bsc.nearby_sender;
 
 
-import android.util.Log;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Train {
     private String mTrain;
@@ -27,8 +28,17 @@ public class Train {
         return mTrain;
     }
 
-    public Station[] getTrainRun() {
-        return mTrainRun;
+    public ArrayList<Station> getTrainRun() {
+        ArrayList<Station> returnRun = new ArrayList();
+
+        if (mTrainRun.length <= next)
+            returnRun.add(mTrainRun[mTrainRun.length - 1]);
+
+        for (int i = next;mTrainRun.length > i; i++) {
+            returnRun.add(mTrainRun[i]);
+        }
+
+        return returnRun;
     }
 
     public String getDirection() {

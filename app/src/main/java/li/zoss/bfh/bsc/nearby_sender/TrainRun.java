@@ -9,6 +9,7 @@ class TrainRun {
         list.add(new Train("S1",s1BernThun,"Achtung: Kein Ausstieg aus diesem Wagen in Münsingen. Perron zu kurz. Bitte begeben Sie sich zum Aussteigen in den vorderen Wagen."));
         list.add(new Train("RE",redomo));
         list.add(new Train("RE",rezweisimmen));
+        list.add(new Train("Testrain",shorttrain));
 
     }
     public Station[] s1BernThun = {
@@ -55,6 +56,10 @@ class TrainRun {
             new Station("Brig",false,"", R.raw.d_h2br),
             new Station("Iselle di Trasquera",false,""),
             new Station("Varzo",false,""),
+            new Station("Domodossola (I)",false,"")
+    };
+    public Station[] shorttrain = {
+            new Station("Münsingen", true, "Infolge Bauarbeiten wird dieser Bahnhof nur als Halt auf Verlangen angefahren.", R.raw.d_h2ms , new int[]{R.raw.d_bf256 ,R.raw.d_f01}),
             new Station("Domodossola (I)",false,"")
     };
 

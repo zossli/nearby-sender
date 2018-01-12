@@ -1,18 +1,17 @@
 package li.zoss.bfh.bsc.nearby_sender;
 
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -29,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -43,23 +43,20 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
     private final String NAME = "Sender " + UUID.randomUUID();
     private static final int REQUEST_CODE_REQUIRED_PERMISSIONS = 1;
 
-
-    //View
-    private TextView txtID;
-    private TextView txtState;
-    private TextView txtConnectedClients;
-    private TextView txtLog;
-    private FloatingActionButton btnFloating;
     private State mState = State.UNKNOWN;
     private boolean googleApiClientIsReady = false;
     private boolean isStreaming = false;
     private Spinner spinnerTrainList;
     private SeekBar numDelay;
-    private Button btnSendDelay;
+    private Button btnSendDelay, btnSendNext;
     private final Map<String, Endpoint> endpointsRequestedSound = new HashMap<>();
 
     private ArrayList<Train> mTrainList = new ArrayList<>();
     private Train mTrain;
+    private ListView lstViewTrain;
+    private TextView txtCurrDelSend,txtNextStop, txtNextStopRequest,txtNextStopisReq;
+    private ArrayList<Station> trainRunAdapter;
+    ArrayAdapter adapterRun;
 
 
     @Override
@@ -72,42 +69,35 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
         //Create some Trains
         TrainRun trainRun = new TrainRun();
         trainRun.setAll(mTrainList);
-
         //set current Train
         mTrain = mTrainList.get(0);
 
-
         //View
-        txtID = findViewById(R.id.txtIDvalue);
-        txtState = findViewById(R.id.txtStatevalue);
-        txtConnectedClients = findViewById(R.id.txtConnectedDevices);
-        txtLog = findViewById(R.id.txtLog);
-        btnFloating = findViewById(R.id.floatingActionButton);
+        btnSendNext = findViewById(R.id.btnNextStop);
         spinnerTrainList = findViewById(R.id.spinnerTrainList);
         btnSendDelay = findViewById(R.id.btnSendDelay);
         numDelay = findViewById(R.id.sbarDelay);
+        lstViewTrain = findViewById(R.id.lstViewTrain);
+        txtCurrDelSend=findViewById(R.id.txtCurrDelSend);
+        txtNextStop=findViewById(R.id.txtNextStop);
+        txtNextStopisReq=findViewById(R.id.txtNextStopisReq);
+        txtNextStopRequest=findViewById(R.id.txtNextStopRequest);
 
-
-        txtConnectedClients.setText("no Clients connected");
-        txtLog.setText("Log:");
-        txtID.setText(NAME.substring(0, 12) + "...");
-        txtState.setText(mState.toString());
-        btnFloating.setOnClickListener(new View.OnClickListener() {
+        btnSendNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mTrain.setNextValue();
                 publishNextStop(mTrain.getNext());
+                txtNextStop.setText(mTrain.getNext().getStationName());
+                txtNextStopRequest.setText(mTrain.getNext().getStationRequestStop().toString());
+                txtNextStopisReq.setText((mTrain.getNext().getStationRequestStop())?"false":"true");
+                setTrainRun(mTrain.getTrainRun());
             }
         });
         btnSendDelay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        publishDelay("" + numDelay.getProgress());
-                    }
-                });
+                publishDelay("" + numDelay.getProgress());
             }
         });
         numDelay.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -133,8 +123,20 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
         spinnerTrainList.setAdapter(adapter);
         spinnerTrainList.setOnItemSelectedListener(this);
 
+        trainRunAdapter = new ArrayList<>(mTrain.getTrainRun());
+
+         adapterRun = new TrainRunListAdapter(this.trainRunAdapter,getApplicationContext());
+
+        lstViewTrain.setAdapter(adapterRun);
+
 
         setState(State.UNKNOWN);
+    }
+
+    private void setTrainRun(ArrayList<Station> trainRun) {
+        trainRunAdapter.clear();
+        trainRunAdapter.addAll(new ArrayList<>(trainRun));
+        adapterRun.notifyDataSetChanged();
     }
 
     @Override
@@ -143,12 +145,10 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
     }
 
     private void refreshConnectedClients() {
-        txtConnectedClients.setText("");
         Iterator<Endpoint> iterator = getConnectedEndpoints().iterator();
         while (iterator.hasNext()) {
             Endpoint endpoint = iterator.next();
             String with = endpointsRequestedSound.containsKey(endpoint.getId()) ? "S> " : "";
-            txtConnectedClients.append(with + endpoint.getName().substring(0, 12) + "..." + "\n");
         }
     }
 
@@ -209,6 +209,7 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
             JSONObject jsonObject = NotificationPayload.getDelayJSON(delay);
             send(Payload.fromBytes(jsonObject.toString().getBytes()));
         }
+        txtCurrDelSend.setText(delay+" min");
     }
 
 
@@ -223,8 +224,7 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
                     case NEXT_STOP:
                         break;
                     case REQUEST_STOP:
-                        txtLog.append("\n");
-                        txtLog.append("Requested Stop for: " + jsonObject.get("forStation").toString());
+                        Log.i(TAG, "Requested Stop for: " + jsonObject.get("forStation").toString());
                         break;
                     case DELAY:
                         break;
@@ -366,6 +366,7 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
         if (getState().equals(State.CONNECTED)) {
             disconnectFromAllEndpoints();
         }
+
     }
 
     @Override
@@ -388,8 +389,6 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
         Log.d(TAG, "State set to " + state);
         State oldState = mState;
         mState = state;
-        txtState.setText(state.toString()
-        );
         onStateChanged(oldState, state);
     }
 
@@ -420,8 +419,6 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
                 // no-op
                 break;
         }
-        txtLog.append("\n");
-        txtLog.append("Now in state: " + state.toString());
     }
 
 }
