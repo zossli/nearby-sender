@@ -4,8 +4,6 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -21,7 +19,7 @@ public class TrainRunListAdapter extends ArrayAdapter<Station> implements View.O
     private static class ViewHolder {
         TextView txtStation;
         ImageView imgRequest;
-        ImageView info;
+        ImageView imgInfo;
     }
 
     public TrainRunListAdapter(ArrayList<Station> data, Context context) {
@@ -56,7 +54,7 @@ public class TrainRunListAdapter extends ArrayAdapter<Station> implements View.O
             LayoutInflater inflater = LayoutInflater.from(getContext());
             convertView = inflater.inflate(R.layout.list_item, parent, false);
             viewHolder.txtStation = convertView.findViewById(R.id.name);
-            viewHolder.info = convertView.findViewById(R.id.imgInfo);
+            viewHolder.imgInfo = convertView.findViewById(R.id.imgInfo);
             viewHolder.imgRequest = convertView.findViewById(R.id.imgRequest);
 
 
@@ -69,8 +67,8 @@ public class TrainRunListAdapter extends ArrayAdapter<Station> implements View.O
         lastPosition = position;
 
         viewHolder.txtStation.setText(dataModel.getStationName());
-        viewHolder.info.setOnClickListener(this);
-        viewHolder.info.setTag(position);
+        viewHolder.imgRequest.setVisibility(dataModel.getStationRequestStop()?View.VISIBLE:View.INVISIBLE);
+        viewHolder.imgInfo.setVisibility(dataModel.hasAdditionalSound()?View.VISIBLE:View.INVISIBLE);
         // Return the completed view to render on screen
         return convertView;
     }

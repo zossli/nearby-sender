@@ -11,6 +11,7 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
@@ -34,7 +35,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
-public class MainActivity extends ConnectionsActivity implements AdapterView.OnItemSelectedListener {
+public class MainActivity extends ConnectionsActivity {
 
     private String TAG = "MainActivity";
 
@@ -57,6 +58,7 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
     private TextView txtCurrDelSend,txtNextStop, txtNextStopRequest,txtNextStopisReq;
     private ArrayList<Station> trainRunAdapter;
     ArrayAdapter adapterRun;
+    private ImageView imgAdvertising,imgConnected;
 
 
     @Override
@@ -82,7 +84,8 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
         txtNextStop=findViewById(R.id.txtNextStop);
         txtNextStopisReq=findViewById(R.id.txtNextStopisReq);
         txtNextStopRequest=findViewById(R.id.txtNextStopRequest);
-
+        imgAdvertising = findViewById(R.id.imgAdvertising);
+        imgConnected = findViewById(R.id.imgConnected);
         btnSendNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -121,7 +124,27 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
         ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, mTrainList);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerTrainList.setAdapter(adapter);
-        spinnerTrainList.setOnItemSelectedListener(this);
+        spinnerTrainList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                Log.i(TAG, "onItemSelected: " + mTrainList.get(position));
+                mTrain = mTrainList.get(position);
+                mTrain.resetTrain();
+                if (getState().equals(State.CONNECTED)) {
+                    disconnectFromAllEndpoints();
+                }
+                setTrainRun(mTrain.getTrainRun());
+                txtNextStop.setText("");
+                txtNextStopRequest.setText("");
+                txtNextStopisReq.setText("");
+                txtCurrDelSend.setText("");
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
 
         trainRunAdapter = new ArrayList<>(mTrain.getTrainRun());
 
@@ -198,7 +221,7 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
                 sequenceInputStream.read();
 
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.e(TAG, "publishNextStop: ", e);
             }
         }
     }
@@ -225,6 +248,14 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
                         break;
                     case REQUEST_STOP:
                         Log.i(TAG, "Requested Stop for: " + jsonObject.get("forStation").toString());
+                        if(mTrain.getNext().getStationName().equals(jsonObject.get("forStation").toString()))
+                        {
+                            txtNextStopisReq.setText("true");
+                        }
+                        else
+                        {
+                            Log.i(TAG, "Stop was Requested for Wrong Station! Curr:"+mTrain.getNext().getStationName()+" Received:"+jsonObject.get("forStation").toString());
+                        }
                         break;
                     case DELAY:
                         break;
@@ -260,7 +291,7 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
                 }
 
             } catch (JSONException e) {
-                e.printStackTrace();
+                Log.e(TAG, "onReceive: ",e );;
             }
         }
     }
@@ -358,22 +389,6 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
     }
 
 
-    @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        Log.i(TAG, "onItemSelected: " + mTrainList.get(position));
-        mTrain = mTrainList.get(position);
-        mTrain.resetTrain();
-        if (getState().equals(State.CONNECTED)) {
-            disconnectFromAllEndpoints();
-        }
-
-    }
-
-    @Override
-    public void onNothingSelected(AdapterView<?> parent) {
-        Log.i(TAG, "onNothingSelected: ");
-    }
-
     /**
      * States that the App goes through.
      */
@@ -408,12 +423,18 @@ public class MainActivity extends ConnectionsActivity implements AdapterView.OnI
             case ADVERTISING:
                 if (googleApiClientIsReady && !isAdvertising())
                     startAdvertising();
+                imgConnected.setVisibility(View.INVISIBLE);
+                imgAdvertising.setVisibility(View.VISIBLE);
                 refreshConnectedClients();
                 break;
             case CONNECTED:
+                imgConnected.setVisibility(View.VISIBLE);
+                imgAdvertising.setVisibility(View.VISIBLE);
                 refreshConnectedClients();
                 break;
             case ERROR:
+                imgConnected.setVisibility(View.INVISIBLE);
+                imgAdvertising.setVisibility(View.INVISIBLE);
                 break;
             default:
                 // no-op
