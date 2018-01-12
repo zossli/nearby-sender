@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -244,7 +243,7 @@ public class MainActivity extends ConnectionsActivity {
                 JSONObject jsonObject = new JSONObject(new String(payload.asBytes()));
                 Log.i(TAG, "onReceive: " + jsonObject);
                 switch (NotType.valueOf((jsonObject.getString("Type")))) {
-                    case NEXT_STOP:
+                    case PUBLISH_NEXT_STOP:
                         break;
                     case REQUEST_STOP:
                         Log.i(TAG, "Requested Stop for: " + jsonObject.get("forStation").toString());
@@ -257,13 +256,13 @@ public class MainActivity extends ConnectionsActivity {
                             Log.i(TAG, "Stop was Requested for Wrong Station! Curr:"+mTrain.getNext().getStationName()+" Received:"+jsonObject.get("forStation").toString());
                         }
                         break;
-                    case DELAY:
+                    case PUBLISH_DELAY:
                         break;
-                    case INFO:
+                    case PUBLISH_COACH_INFO:
                         break;
-                    case TRAIN_INFO:
+                    case REQUEST_TRAIN_INFO:
                         break;
-                    case GET_TRAIN:
+                    case RESPONSE_TRAIN_INFO:
                         JSONObject jsonPayload = NotificationPayload.getTrainInfo(mTrain, numDelay.getProgress() + " min");
                         send(Payload.fromBytes(jsonPayload.toString().getBytes()), endpoint);
                         boolean alreadyReceived = false;
@@ -274,9 +273,7 @@ public class MainActivity extends ConnectionsActivity {
                             send(Payload.fromBytes(jsonPayload.toString().getBytes()), endpoint);
                         }
                         break;
-                    case CONNECTED_TO_SYSTEM:
-                        break;
-                    case WITH_SOUND_REQUEST:
+                    case REQUEST_WITH_SOUND:
                         if (jsonObject.getBoolean("willPlaySound"))
                             endpointsRequestedSound.put(endpoint.getId(), endpoint);
                         else {
@@ -286,7 +283,7 @@ public class MainActivity extends ConnectionsActivity {
                         send(Payload.fromBytes(jsonPayloadSound.toString().getBytes()), endpoint);
                         refreshConnectedClients();
                         break;
-                    case WITH_SOUND_RESPONSE:
+                    case RESPONSE_WITH_SOUND:
                         break;
                 }
 

@@ -1,7 +1,5 @@
 package li.zoss.bfh.bsc.nearby_sender;
 
-import android.util.Log;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -10,7 +8,7 @@ public class NotificationPayload {
 
     public static JSONObject getNextStopJSON(Station nextStop) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject=addToJSON(jsonObject, "Type", NotType.NEXT_STOP);
+        jsonObject=addToJSON(jsonObject, "Type", NotType.PUBLISH_NEXT_STOP);
         jsonObject=addToJSON(jsonObject, "trainNextStopRequestNeeded", nextStop.getStationRequestStop());
         jsonObject=addToJSON(jsonObject, "trainNextStop", nextStop.getStationName());
         jsonObject=addToJSON(jsonObject, "trainNextStationInfo", nextStop.getStationInfo());
@@ -19,28 +17,28 @@ public class NotificationPayload {
 
     public static JSONObject getDelayJSON(String delay) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject=addToJSON(jsonObject, "Type", NotType.DELAY);
+        jsonObject=addToJSON(jsonObject, "Type", NotType.PUBLISH_DELAY);
         jsonObject=addToJSON(jsonObject, "trainDelay", delay+" min");
         return jsonObject;
     }
 
     public static JSONObject soundWillPlay(Boolean willPlay) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject=addToJSON(jsonObject, "Type", NotType.WITH_SOUND_RESPONSE);
+        jsonObject=addToJSON(jsonObject, "Type", NotType.RESPONSE_WITH_SOUND);
         jsonObject=addToJSON(jsonObject, "willPlaySound", willPlay);
         return jsonObject;
     }
 
     public static JSONObject getSpecialCoachInfo(Train train) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject=addToJSON(jsonObject, "Type", NotType.INFO);
+        jsonObject=addToJSON(jsonObject, "Type", NotType.PUBLISH_COACH_INFO);
         jsonObject=addToJSON(jsonObject, "trainSpecialCoachInfo", train.getSpecialCoachInfo());
         return jsonObject;
     }
 
     public static JSONObject getTrainInfo(Train train, String delay) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject=addToJSON(jsonObject, "Type", NotType.TRAIN_INFO);
+        jsonObject=addToJSON(jsonObject, "Type", NotType.REQUEST_TRAIN_INFO);
         jsonObject=addToJSON(jsonObject, "trainInfo", train.getTrain());
         jsonObject=addToJSON(jsonObject, "trainSpecialCoachInfo", train.getSpecialCoachInfo());
         jsonObject=addToJSON(jsonObject, "trainDirection", train.getDirection());
