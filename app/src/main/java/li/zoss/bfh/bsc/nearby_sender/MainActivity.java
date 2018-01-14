@@ -260,9 +260,9 @@ public class MainActivity extends ConnectionsActivity {
                         break;
                     case PUBLISH_COACH_INFO:
                         break;
-                    case REQUEST_TRAIN_INFO:
-                        break;
                     case RESPONSE_TRAIN_INFO:
+                        break;
+                    case REQUEST_TRAIN_INFO:
                         JSONObject jsonPayload = NotificationPayload.getTrainInfo(mTrain, numDelay.getProgress() + " min");
                         send(Payload.fromBytes(jsonPayload.toString().getBytes()), endpoint);
                         boolean alreadyReceived = false;

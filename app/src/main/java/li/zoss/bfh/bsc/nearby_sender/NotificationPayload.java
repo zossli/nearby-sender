@@ -12,6 +12,7 @@ public class NotificationPayload {
         jsonObject=addToJSON(jsonObject, "trainNextStopRequestNeeded", nextStop.getStationRequestStop());
         jsonObject=addToJSON(jsonObject, "trainNextStop", nextStop.getStationName());
         jsonObject=addToJSON(jsonObject, "trainNextStationInfo", nextStop.getStationInfo());
+        jsonObject=addToJSON(jsonObject, "trainNextStationDep", nextStop.getNextDepartures());
         return jsonObject;
     }
 
@@ -38,7 +39,7 @@ public class NotificationPayload {
 
     public static JSONObject getTrainInfo(Train train, String delay) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject=addToJSON(jsonObject, "Type", NotType.REQUEST_TRAIN_INFO);
+        jsonObject=addToJSON(jsonObject, "Type", NotType.RESPONSE_TRAIN_INFO);
         jsonObject=addToJSON(jsonObject, "trainInfo", train.getTrain());
         jsonObject=addToJSON(jsonObject, "trainSpecialCoachInfo", train.getSpecialCoachInfo());
         jsonObject=addToJSON(jsonObject, "trainDirection", train.getDirection());
@@ -46,6 +47,7 @@ public class NotificationPayload {
         jsonObject=addToJSON(jsonObject, "trainNextStationInfo", train.getNext().getStationInfo());
         jsonObject=addToJSON(jsonObject, "trainNextStopRequestNeeded", train.getNext().getStationRequestStop());
         jsonObject=addToJSON(jsonObject, "trainCurrentDelay", delay);
+        jsonObject=addToJSON(jsonObject, "trainNextStationDep", "");
         return jsonObject;
     }
 

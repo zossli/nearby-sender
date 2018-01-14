@@ -1,10 +1,14 @@
 package li.zoss.bfh.bsc.nearby_sender;
 
+import com.google.android.gms.nearby.messages.Strategy;
+
 import java.util.ArrayList;
 import java.util.List;
 
 class Station {
-    private String mName, mInfo;
+    private String mName;
+    private String mInfo;
+    private String[] mNextDep = null;
     private int mStationSound = 0;
     private int[] mAdditionalSounds = null;
     private Boolean mRequestStop;
@@ -28,6 +32,15 @@ class Station {
         mRequestStop = requestStop;
         mStationSound = stationSound;
         mAdditionalSounds = additionalSounds;
+    }
+
+    public Station(String name, Boolean requestStop, String info, int stationSound, int[] additionalSounds, String[] nextDep) {
+        mName = name;
+        mInfo = info;
+        mRequestStop = requestStop;
+        mStationSound = stationSound;
+        mAdditionalSounds = additionalSounds;
+        mNextDep = nextDep;
     }
 
     public String getStationName() {
@@ -54,6 +67,19 @@ class Station {
         return !(mAdditionalSounds == null);
     }
 
+    public String getNextDepartures(){
+        String ret = "";
+        if(mNextDep==null)
+            return "";
+        for (int i=0;mNextDep.length>i;i++)
+        {
+            if(i>0)
+                ret = ret+"\n";
+            ret = ret+" "+mNextDep[i];
+        }
+        return ret;
+    }
+
     public List getmAdditionalSounds() {
         if (mAdditionalSounds == null) {
             return new ArrayList(0);
@@ -66,4 +92,6 @@ class Station {
             return list;
         }
     }
+
+
 }

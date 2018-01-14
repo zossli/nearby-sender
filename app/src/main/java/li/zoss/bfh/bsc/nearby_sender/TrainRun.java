@@ -17,16 +17,16 @@ class TrainRun {
             new Station("Ostermundigen", false, "",R.raw.d_h2ost),
             new Station("Gümligen",false,"", R.raw.d_h2gue),
             new Station("Rubigen",false,"", R.raw.d_h2rub),
-            new Station("Münsingen", true, "Infolge Bauarbeiten - Halt auf Verlangen.", R.raw.d_h2ms , new int[]{R.raw.d_bf256 ,R.raw.d_f01}),
+            new Station("Münsingen", true, "Infolge Bauarbeiten - Halt auf Verlangen.", R.raw.d_h2ms , new int[]{R.raw.d_bf256 ,R.raw.d_f01}, NextConnections.forMuensingen()),
             new Station("Wichtrach",false,"", R.raw.d_h2wch),
             new Station("Kiesen",false,"",R.raw.d_h2ki),
             new Station("Uttigen",false,"", R.raw.d_h2uti),
-            new Station("Thun",false, "Endbahnhof, bitte alle aussteigen.", R.raw.d_h2th, new int[]{R.raw.d_e9104})
+            new Station("Thun",false, "Endbahnhof, bitte alle aussteigen.", R.raw.d_h2th, new int[]{R.raw.d_e9104}, NextConnections.forThun())
     };
     public Station[] rezweisimmen = {
-            new Station("Münsingen", true, "Infolge Bauarbeiten - Halt auf Verlangen.", R.raw.d_h2ms , new int[]{R.raw.d_bf256 ,R.raw.d_f01}),
-            new Station("Thun", false, "", R.raw.d_h2th),
-            new Station("Spiez",false,"", R.raw.d_h2sp),
+            new Station("Münsingen", true, "Infolge Bauarbeiten - Halt auf Verlangen.", R.raw.d_h2ms , new int[]{R.raw.d_bf256 ,R.raw.d_f01}, NextConnections.forMuensingen()),
+            new Station("Thun", false, "", R.raw.d_h2th,null, NextConnections.forThun()),
+            new Station("Spiez",false,"", R.raw.d_h2sp,null, NextConnections.forThun()),
             new Station("Lattigen bei Spiez",false,"", R.raw.d_h2lat),
             new Station("Wimmis", false, "", R.raw.d_h2wm),
             new Station("Burgholz",false,"", R.raw.d_h2bh),
@@ -41,9 +41,9 @@ class TrainRun {
             new Station("Zweisimmen",false,"Endbahnhof, bitte alle aussteigen.", R.raw.d_h2zw,new int[]{R.raw.d_e9104})
     };
     public Station[] redomo = {
-            new Station("Münsingen", true, "Infolge Bauarbeiten - Halt auf Verlangen.", R.raw.d_h2ms , new int[]{R.raw.d_bf256 ,R.raw.d_f01}),
-            new Station("Thun", false, "", R.raw.d_h2th),
-            new Station("Spiez",false,"", R.raw.d_h2sp),
+            new Station("Münsingen", true, "Infolge Bauarbeiten - Halt auf Verlangen.", R.raw.d_h2ms , new int[]{R.raw.d_bf256 ,R.raw.d_f01}, NextConnections.forMuensingen()),
+            new Station("Thun", false, "", R.raw.d_h2th,null, NextConnections.forThun()),
+            new Station("Spiez",false,"", R.raw.d_h2sp,null, NextConnections.forThun()),
             new Station("Mülenen",true,"", R.raw.d_h2mue),
             new Station("Reichenbach im Kandertal",false,"", R.raw.d_h2reik),
             new Station("Frutigen",false,"", R.raw.d_h2fr),
@@ -59,7 +59,7 @@ class TrainRun {
             new Station("Domodossola (I)",false,"")
     };
     public Station[] shorttrain = {
-            new Station("Münsingen", true, "Infolge Bauarbeiten - Halt auf Verlangen.", R.raw.d_h2ms , new int[]{R.raw.d_bf256 ,R.raw.d_f01}),
+            new Station("Münsingen", true, "Infolge Bauarbeiten - Halt auf Verlangen.", R.raw.d_h2ms , new int[]{R.raw.d_bf256 ,R.raw.d_f01}, NextConnections.forMuensingen()),
             new Station("Wichtrach",false,"Geschätzte Fahrgäste. Unser Zug kann nicht weiterfahren. Wir bitten Sie auszusteigen und für Ihre Weiterreise die Informationen am Bahnhof zu beachten. Für die Unannehmlichkeiten bitten wir Sie um Entschuldigung.\n", R.raw.d_h2wch, new int[]{R.raw.d_bf223})
     };
 
