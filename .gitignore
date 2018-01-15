@@ -59,8 +59,8 @@ freeline/
 freeline_project_description.json
 
 #MP3 Files
-app/src/main/res/raw/*.mp3
-!app/src/main/res/raw/jinglepublic.mp3
+app/src/main/res/raw/*
+!jinglepublic.mp3
 
 #Release Files
-app/*
+app/release/
