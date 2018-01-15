@@ -39,7 +39,7 @@ public class MainActivity extends ConnectionsActivity {
     private String TAG = "MainActivity";
 
     //Used for ConnectionsActivity
-    private static final String SERVICE_ID = "li.zoss.bfh.bsc.appstore";
+    private static final String SERVICE_ID = "li.zoss.bfh.bsc";
     private final String NAME = "Sender " + UUID.randomUUID();
     private static final int REQUEST_CODE_REQUIRED_PERMISSIONS = 1;
 
