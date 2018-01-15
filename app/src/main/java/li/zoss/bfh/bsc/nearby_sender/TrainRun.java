@@ -34,7 +34,7 @@ class TrainRun {
             new Station("Erlenbach im Simmental",false,"", R.raw.jinglepublic),
             new Station("Ringoldingen",true,"", R.raw.jinglepublic, new int[]{R.raw.jinglepublic}),
             new Station("Därstetten",true,"", R.raw.jinglepublic, new int[]{R.raw.jinglepublic}),
-            new Station("Weissenburg",true,"", R.raw.d_h2wg, new int[]{R.raw.jinglepublic}),
+            new Station("Weissenburg",true,"", R.raw.jinglepublic, new int[]{R.raw.jinglepublic}),
             new Station("Oberwil im Simmental",false,"", R.raw.jinglepublic),
             new Station("Enge im Simmental",false,"", R.raw.jinglepublic),
             new Station("Boltigen",false,"", R.raw.jinglepublic),
