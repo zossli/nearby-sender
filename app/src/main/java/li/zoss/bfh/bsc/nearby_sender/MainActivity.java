@@ -131,6 +131,7 @@ public class MainActivity extends ConnectionsActivity {
                 mTrain.resetTrain();
                 if (getState().equals(State.CONNECTED)) {
                     disconnectFromAllEndpoints();
+                    setState(State.ADVERTISING);
                 }
                 setTrainRun(mTrain.getTrainRun());
                 txtNextStop.setText("");
@@ -167,11 +168,11 @@ public class MainActivity extends ConnectionsActivity {
     }
 
     private void refreshConnectedClients() {
-        Iterator<Endpoint> iterator = getConnectedEndpoints().iterator();
-        while (iterator.hasNext()) {
-            Endpoint endpoint = iterator.next();
-            String with = endpointsRequestedSound.containsKey(endpoint.getId()) ? "S> " : "";
+        if(getConnectedEndpoints().size()>0)
+        {
+
         }
+
     }
 
 

@@ -97,7 +97,7 @@
             android:id="@+id/textView6"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Last sended data:" />
+            android:text="Last sent data:" />
 
         <LinearLayout
             android:id="@+id/layout1"
@@ -177,7 +177,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="sended Delay"
+                android:text="Delay"
                 app:layout_constraintStart_toEndOf="@+id/txtNextStopRequest"
                 app:layout_constraintTop_toBottomOf="@+id/txtNextStopisReqStatic" />
 
